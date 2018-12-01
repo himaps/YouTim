@@ -34,6 +34,7 @@ var UTMConv = (function () {
 	    wgs84         : { eqrad : 6378137.0, flat : 298.2572236 },
 	    nad83         : { eqrad : 6378137.0, flat : 298.2572236 },
 	    grs80         : { eqrad : 6378137.0, flat : 298.2572215 },
+	    cgcs2000      : { eqrad : 6378137.0, flat : 298.2572221 },
 	    wgs72         : { eqrad : 6378135.0, flat : 298.2597208 },
 	    aust1965      : { eqrad : 6378160.0, flat : 298.2497323 },
 	    krasovsky1940 : { eqrad : 6378245.0, flat : 298.2997381 },
@@ -58,9 +59,9 @@ var UTMConv = (function () {
 	};
 
 	function DegCoords(latd, lngd, datum) {
-	    this.latd = latd;
-	    this.lngd = lngd;
-	    this.datum = datum || "cgcs2000";
+	    this.latd = parseFloat(latd);
+	    this.lngd = parseFloat(lngd);
+	    this.datum = datum || "wgs84";
 	}
 
 	DegCoords.prototype.calc_utmz = function () {
