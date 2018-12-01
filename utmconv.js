@@ -21,7 +21,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /*jslint vars: true, white: true */
-
+/*
+ * 适用于中国的高斯克吕格投影(6度分带)
+ * 1.调整中央经线比例由0.9996为1.
+ * 2.调整北半球北偏为1000000.
+ * 3.调整带号计算规则：UTM(1-60),GaussKruger(31-60,1-30)
+*/
 var UTMConv = (function () {
 	"use strict";
 
@@ -55,7 +60,7 @@ var UTMConv = (function () {
 	function DegCoords(latd, lngd, datum) {
 	    this.latd = latd;
 	    this.lngd = lngd;
-	    this.datum = datum || "wgs84";
+	    this.datum = datum || "cgcs2000";
 	}
 
 	DegCoords.prototype.calc_utmz = function () {
@@ -74,7 +79,7 @@ var UTMConv = (function () {
 	    var f = 1 / DatumInfo[this.datum].flat;//polar flattening.
 
 	    var drad = Math.PI/180;//Convert degrees to radians)
-	    var k0 = 0.9996;//scale on central meridian
+	    var k0 = 1;//scale on central meridian
 	    var b = a*(1-f);//polar axis.
 	    var e = Math.sqrt(1 - (b/a)*(b/a));//eccentricity
 
@@ -112,7 +117,14 @@ var UTMConv = (function () {
 	    // var yg = y + 10000000;//yg = y global, from S. Pole
 
 	    // Let negative values stand for southern hemisphere.
-	    //if (y < 0){y = 10000000+y;}
+	    if (y < 0){y = 10000000+y;}
+
+	    //调整utmz以适应GaussKrugerZone
+	    if(utmz>30){
+	    	utmz-=30;
+	    }else{
+	    	utmz+=30;
+	    }
 
 	    return new UTMCoords(utmz, x, y);
 	};
@@ -123,15 +135,15 @@ var UTMConv = (function () {
 
 	UTMCoords.prototype.to_deg = function (datum) {
 	    // Convert UTM coords to Deg coords. If datum is unspecified,
-	    // default to wgs84.
+	    // default to cgcs2000.
 
-	    datum = datum || "wgs84";
+	    datum = datum || "cgcs2000";
 
 	    var a = DatumInfo[datum].eqrad;//equatorial radius, meters. 
 	    var f = 1 / DatumInfo[datum].flat;//polar flattening.
 
 	    var drad = Math.PI/180;//Convert degrees to radians)
-	    var k0 = 0.9996;//scale on central meridian
+	    var k0 = 1;//scale on central meridian
 	    var b = a*(1-f);//polar axis.
 	    var e = Math.sqrt(1 - (b/a)*(b/a));//eccentricity
 	    // var e0 = e/Math.sqrt(1 - e*e);//Called e prime in reference
@@ -140,6 +152,13 @@ var UTMConv = (function () {
 
 	    var x = this.easting;
 	    var y = this.northing;
+
+	    //调整GaussKruger以适应utmz
+	    if(utmz>30){
+	    	utmz-=30;
+	    }else{
+	    	utmz+=30;
+	    }
 
 	    var zcm = 3 + 6*(this.utmz-1) - 180;//Central meridian of zone
 	    var e1 = (1 - Math.sqrt(1 - e*e))/(1 + Math.sqrt(1 - e*e));//Called e1 in USGS PP 1395 also
@@ -166,7 +185,7 @@ var UTMConv = (function () {
 	};
 
 	function DegMinCoords(latdir, latdeg, latmin, lngdir, lngdeg, lngmin, datum) {
-	    this.datum = datum || "wgs84";
+	    this.datum = datum || "cgcs2000";
 	    this.latdir = latdir;
 	    this.latdeg = latdeg;
 	    this.latmin = latmin;
